@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>Frequency Analyzer by WebAudio API</title>
+</head><body>
+
+<h1>Frequency Analyzer by WebAudio API</h1>
+
+<canvas id="myChart" width="400" height="200"></canvas>
+
+<main id=main>
+</main><br>
+<button id=btnclear>clear max value</button><br>
+<label><input type=checkbox id=chktbl checked>enable show value on the table</label><br>
+
+<hr>
+<a href=https://github.com/code4fukui/freq-analyzer/>src on GitHub</a><br>
+
+<style>
+body {
+  font-family: sans-serif;
+}
+td, th {
+  font-size: 50%;
+  margin: 0;
+  paddinng: 0;
+}
+</style>
+
+<script type="module">
+import { cr } from "https://js.sabae.cc/cr.js";
+import { Chart } from "https://code4fukui.github.io/Chart-es/Chart.js";
+
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const audioContext = new AudioContext();
+const source = audioContext.createMediaStreamSource(stream);
+
+const analyser = audioContext.createAnalyser();
+//analyser.fftSize = 2048;
+analyser.fftSize = 32; // from 32 to 32768
+source.connect(analyser);
+
+const sampleRate = audioContext.sampleRate;
+const nyquist = sampleRate / 2;
+const binSize = nyquist / analyser.frequencyBinCount;
+const freqSize = analyser.frequencyBinCount;
+
+const tbl = cr("table", main);
+const tds = [];
+const tds2 = [];
+for (let i = 0; i < freqSize; i++) {
+  const frequency = i * binSize;
+  const tr = cr("tr", tbl);
+  const th = cr("th", tr);
+  th.textContent = frequency.toFixed(1) + "Hz";
+  tds.push(cr("td", tr));
+  const td2 = cr("td", tr);
+  tds2.push(td2);
+  td2.textContent = 0;
+}
+
+const showTable = (frequencyData) => {
+  for (let i = 0; i < frequencyData.length; i++) {
+    const f = frequencyData[i];
+    tds[i].textContent = f;
+    if (f > parseInt(tds2[i].textContent)) {
+      tds2[i].textContent = f;
+    }
+  }
+};
+
+btnclear.onclick = () => {
+  tds2.forEach(i => i.textContent = 0);
+};
+
+//
+
+const len = 20;
+const labels = [];
+for (let i = 0; i < len; i++) {
+  labels[i] = i;
+}
+const datasets = [];
+for (let i = 0; i < freqSize; i++) {
+  const frequency = i * binSize;
+  const data = new Array(len);
+  datasets[i] = {
+    label: frequency + "Hz",
+    data,
+    borderColor: `hsl(${(i / freqSize * 340)}, ${90}%, ${50}%)`,
+    borderWidth: 1,
+    pointRadius: 0,
+  };
+}
+
+const ctx = myChart.getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets,
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'time'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'FFT value'
+        },
+        beginAtZero: true,
+        max: 255,
+      }
+    }
+  }
+});
+
+const showGraph = (freq) => {
+  for (let i = 0; i < freqSize; i++) {
+    for (let j = len - 1; j > 0; j--) {
+      datasets[i].data[j] = datasets[i].data[j - 1];
+    }
+    datasets[i].data[0] = freq[i];
+  }
+  chart.update();
+};
+
+//
+const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+const processAudio = () => {
+  analyser.getByteFrequencyData(frequencyData);
+  if (chktbl.checked) {
+    showTable(frequencyData);
+  }
+  showGraph(frequencyData);
+  requestAnimationFrame(processAudio);
+};
+processAudio();
+
+</script>
+
+</body>
+</html>
