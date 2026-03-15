@@ -1,5 +1,7 @@
 # freq-analyzer
 
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
+
 Frequency Analyzer using the WebAudio API.
 
 ## Demo
