@@ -11,6 +11,7 @@ https://code4fukui.github.io/freq-analyzer/
 - Real-time audio frequency analysis using the WebAudio API
 - Displays the frequency spectrum in a chart
 - Option to show the frequency values in a table
+- Ability to clear the maximum values shown in the table
 
 ## Usage
 1. Open the web page in a browser
@@ -19,4 +20,4 @@ https://code4fukui.github.io/freq-analyzer/
 4. The "clear max value" button will reset the maximum values shown in the table
 
 ## License
-MIT License
+MIT License — see [LICENSE](LICENSE).
